@@ -1,19 +1,24 @@
 const express = require('express');
+const mongoose = require('mongoose');
+const exphbs = require('express-handlebars');
+
 const app = express();
 
-var exphbs = require('express-handlebars');
+mongoose.connect('mongodb://localhost/rotten-potatoes');
 
 app.engine('handlebars', exphbs({defaultLayout: 'main'}));
 app.set('view engine', 'handlebars');
 
-// mock array
-let reviews = [
-  { title: 'Great Review' },
-  { title: 'Next Review' }
-]
+const Review = mongoose.model('Review', {
+  title: String
+});
 
 app.get('/', (req, res) => {
-  res.render('reviews-index', { reviews: reviews })
+  Review.find().then((reviews) => {
+    res.render('reviews-index', { reviews: reviews })
+  }).catch((err) => {
+    console.log(err)
+  })
 })
 
 app.listen(3000, () => {
