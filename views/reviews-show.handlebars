@@ -12,5 +12,16 @@
         <button class="btn btn-primary" type="submit">Delete</button>
       </form>
     </p>
+
+    <hr>
+
+    {{> comment-form}}
+
+    <hr>
+    <!-- Show Comments -->
+    {{#each comments}}
+      {{> comment}}
+    {{/each}}
+    
   </div>
 </div>

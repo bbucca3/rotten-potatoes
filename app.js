@@ -4,6 +4,9 @@ const exphbs = require('express-handlebars');
 const bodyParser = require('body-parser');
 const methodOverride = require('method-override');
 
+const Review = require('./models/review');
+const Comment = require('./models/comment');
+
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 // override with POST having ?_method=DELETE or ?_method=PUT
@@ -13,12 +16,6 @@ app.engine('handlebars', exphbs({defaultLayout: 'main'}));
 app.set('view engine', 'handlebars');
 
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost/rotten-potatoes');
-
-const Review = mongoose.model('Review', {
-  title: String,
-  description: String,
-  movieTitle: String
-});
 
 // INDEX
 app.get('/', (req, res) => {
@@ -46,8 +43,12 @@ app.post('/reviews', (req, res) => {
 
 // SHOW
 app.get('/reviews/:id', (req, res) => {
-  Review.findById(req.params.id).then((review) => {
-    res.render('reviews-show', { review: review })
+  const findReviews = Review.findById(req.params.id)
+  const findComments = Comment.find({ reviewId: Object(req.params.id) })
+
+  Promise.all([findReviews, findComments]).then((values) => {
+    console.log(values)
+    res.render('reviews-show', { review: values[0], comments: values[1] })
   }).catch((err) => {
     console.log(err.message)
   })
@@ -76,6 +77,15 @@ app.delete('/reviews/:id', function (req, res) {
     res.redirect('/');
   }).catch((err) => {
     console.log(err.message);
+  })
+})
+
+// NEW Comment
+app.post('/reviews/comment', (req, res) => {
+  Comment.create(req.body).then((comment) => {
+    res.redirect('/reviews/' + comment.reviewId)
+  }).catch((err) => {
+    console.log(err.message)
   })
 })
 
